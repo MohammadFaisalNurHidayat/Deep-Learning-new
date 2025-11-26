@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Prediksi Penyakit Jantung</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: transform 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        .result-positive {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 3px solid #ef4444;
+        }
+        .result-negative {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border: 3px solid #10b981;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container mx-auto max-w-6xl">
+        
+        <!-- Header -->
+        <div class="card p-8 mb-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                        🏥 Sistem Prediksi Penyakit Jantung
+                    </h1>
+                    <p class="text-gray-600 text-lg">
+                        Menggunakan Deep Learning Neural Network
+                    </p>
+                </div>
+                <div class="bg-purple-100 px-6 py-3 rounded-lg">
+                    <p class="text-sm text-gray-600 mb-1">Akurasi Model</p>
+                    <p class="text-3xl font-bold text-purple-600" id="accuracy">-</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid lg:grid-cols-3 gap-6">
+            
+            <!-- Left: Input Form -->
+            <div class="lg:col-span-2">
+                <div class="card p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                        📋 Input Data Pasien
+                    </h2>
+                    
+                    <form id="predictionForm" class="space-y-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Usia (tahun)
+                                </label>
+                                <input type="number" name="age" value="50" required 
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Jenis Kelamin
+                                </label>
+                                <select name="sex" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="1">Pria</option>
+                                    <option value="0">Wanita</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Tipe Nyeri Dada
+                                </label>
+                                <select name="cp" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">Typical Angina</option>
+                                    <option value="1">Atypical Angina</option>
+                                    <option value="2">Non-anginal Pain</option>
+                                    <option value="3">Asymptomatic</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Tekanan Darah (mm Hg)
+                                </label>
+                                <input type="number" name="trestbps" value="120" required 
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Kolesterol (mg/dl)
+                                </label>
+                                <input type="number" name="chol" value="200" required 
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Gula Darah Puasa
+                                </label>
+                                <select name="fbs" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">&lt; 120 mg/dl</option>
+                                    <option value="1">&gt; 120 mg/dl</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Hasil ECG Istirahat
+                                </label>
+                                <select name="restecg" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">Normal</option>
+                                    <option value="1">ST-T Wave Abnormality</option>
+                                    <option value="2">Left Ventricular Hypertrophy</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Detak Jantung Maksimal
+                                </label>
+                                <input type="number" name="thalach" value="150" required 
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Angina saat Olahraga
+                                </label>
+                                <select name="exang" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">Tidak</option>
+                                    <option value="1">Ya</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    ST Depression (Oldpeak)
+                                </label>
+                                <input type="number" name="oldpeak" value="1.0" step="0.1" required 
+                                       class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Slope ST Segment
+                                </label>
+                                <select name="slope" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">Upsloping</option>
+                                    <option value="1">Flat</option>
+                                    <option value="2">Downsloping</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Jumlah Pembuluh Darah (CA)
+                                </label>
+                                <select name="ca" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Thalassemia
+                                </label>
+                                <select name="thal" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none">
+                                    <option value="0">Normal</option>
+                                    <option value="1">Fixed Defect</option>
+                                    <option value="2">Reversible Defect</option>
+                                    <option value="3">Not Described</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <button type="submit" class="w-full btn-primary text-white font-bold py-4 rounded-lg text-lg mt-6">
+                            🔮 Prediksi Sekarang
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Info & Metrics -->
+            <div class="space-y-6">
+                
+                <!-- Model Info -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">ℹ️ Informasi Model</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Arsitektur:</span>
+                            <span class="font-semibold">Deep Neural Network</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Jumlah Layer:</span>
+                            <span class="font-semibold">4 Hidden Layers</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Aktivasi:</span>
+                            <span class="font-semibold">ReLU & Sigmoid</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Optimizer:</span>
+                            <span class="font-semibold">Adam</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Dataset:</span>
+                            <span class="font-semibold" id="datasetSize">303 samples</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">📊 Performa Model</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm text-gray-600">Accuracy</span>
+                                <span class="text-sm font-bold" id="metricAccuracy">-</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div id="barAccuracy" class="bg-purple-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm text-gray-600">Precision</span>
+                                <span class="text-sm font-bold" id="metricPrecision">-</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div id="barPrecision" class="bg-green-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-sm text-gray-600">Recall</span>
+                                <span class="text-sm font-bold" id="metricRecall">-</span>
+                            </div>
+                            <div class="bg-gray-200 rounded-full h-2">
+                                <div id="barRecall" class="bg-blue-600 h-2 rounded-full" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="retrainModel()" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg text-sm transition">
+                        🔄 Latih Ulang Model
+                    </button>
+                </div>
+
+                <!-- Confusion Matrix -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">🎯 Confusion Matrix</h3>
+                    <canvas id="confusionChart"></canvas>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Result Section -->
+        <div id="resultSection" class="hidden mt-6">
+            <div id="resultCard" class="card p-8">
+                <div class="text-center mb-6">
+                    <div class="text-6xl mb-4" id="resultIcon">❤️</div>
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2" id="resultTitle">Hasil Prediksi</h2>
+                    <p class="text-xl text-gray-600" id="resultSubtitle">-</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-purple-50 p-6 rounded-lg border-2 border-purple-200">
+                        <p class="text-sm text-gray-600 mb-2">Probabilitas Penyakit</p>
+                        <p class="text-4xl font-bold text-purple-600 mb-3" id="probability">-</p>
+                        <div class="bg-gray-200 rounded-full h-3">
+                            <div id="probBar" class="bg-purple-600 h-3 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-6 rounded-lg border-2 border-blue-200">
+                        <p class="text-sm text-gray-600 mb-2">Level Risiko</p>
+                        <p class="text-4xl font-bold text-blue-600" id="riskLevel">-</p>
+                    </div>
+                </div>
+
+                <!-- Risk Factors -->
+                <div id="riskFactorsSection" class="hidden bg-orange-50 p-6 rounded-lg border-2 border-orange-200 mb-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">⚠️ Faktor Risiko Teridentifikasi</h3>
+                    <div id="riskFactorsList" class="space-y-2"></div>
+                </div>
+
+                <!-- Recommendations -->
+                <div id="recommendations" class="p-6 rounded-lg border-2">
+                    <!-- Will be filled dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="card p-6 mt-6 text-center">
+            <p class="text-gray-600 font-semibold">
+                Deep Learning Project 2025 • Heart Disease Prediction System
+            </p>
+            <p class="text-sm text-gray-500 mt-2">
+                Menggunakan Neural Network untuk Deteksi Dini Penyakit Jantung
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        let confusionChart = null;
+
+        // Load metrics on page load
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/metrics');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    const m = data.metrics;
+                    
+                    // Update accuracy
+                    document.getElementById('accuracy').textContent = (m.accuracy * 100).toFixed(2) + '%';
+                    
+                    // Update detailed metrics
+                    document.getElementById('metricAccuracy').textContent = (m.accuracy * 100).toFixed(2) + '%';
+                    document.getElementById('metricPrecision').textContent = (m.precision * 100).toFixed(2) + '%';
+                    document.getElementById('metricRecall').textContent = (m.recall * 100).toFixed(2) + '%';
+                    
+                    // Animate bars
+                    setTimeout(() => {
+                        document.getElementById('barAccuracy').style.width = (m.accuracy * 100) + '%';
+                        document.getElementById('barPrecision').style.width = (m.precision * 100) + '%';
+                        document.getElementById('barRecall').style.width = (m.recall * 100) + '%';
+                    }, 100);
+                    
+                    // Update dataset size
+                    document.getElementById('datasetSize').textContent = m.total_samples + ' samples';
+                    
+                    // Draw confusion matrix
+                    if (m.confusion_matrix) {
+                        drawConfusionMatrix(m.confusion_matrix);
+                    }
+                }
+            } catch (error) {
+                console.log('Model belum dilatih');
+            }
+        }
+
+        function drawConfusionMatrix(cm) {
+            const ctx = document.getElementById('confusionChart');
+            if (confusionChart) confusionChart.destroy();
+            
+            confusionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['True Negative', 'False Positive', 'False Negative', 'True Positive'],
+                    datasets: [{
+                        label: 'Jumlah',
+                        data: [cm[0][0], cm[0][1], cm[1][0], cm[1][1]],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(16, 185, 129, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Prediction form handler
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showResult(result, data);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        function showResult(result, inputData) {
+            const section = document.getElementById('resultSection');
+            const card = document.getElementById('resultCard');
+            
+            section.classList.remove('hidden');
+            
+            const hasDisease = result.prediction === 1;
+            const probability = result.probability * 100;
+            
+            // Update result styling
+            if (hasDisease) {
+                card.className = 'card p-8 result-positive';
+                document.getElementById('resultIcon').textContent = '⚠️';
+                document.getElementById('resultTitle').textContent = 'Terdeteksi Risiko Penyakit Jantung';
+                document.getElementById('resultSubtitle').textContent = 'Segera konsultasi dengan dokter';
+            } else {
+                card.className = 'card p-8 result-negative';
+                document.getElementById('resultIcon').textContent = '✅';
+                document.getElementById('resultTitle').textContent = 'Tidak Terdeteksi Risiko Penyakit Jantung';
+                document.getElementById('resultSubtitle').textContent = 'Tetap jaga kesehatan Anda';
+            }
+            
+            // Update probability
+            document.getElementById('probability').textContent = probability.toFixed(2) + '%';
+            setTimeout(() => {
+                document.getElementById('probBar').style.width = probability + '%';
+            }, 100);
+            
+            // Update risk level
+            document.getElementById('riskLevel').textContent = result.risk_level;
+            
+            // Show risk factors if any
+            const riskSection = document.getElementById('riskFactorsSection');
+            const riskList = document.getElementById('riskFactorsList');
+            
+            if (result.risk_factors && result.risk_factors.length > 0) {
+                riskSection.classList.remove('hidden');
+                riskList.innerHTML = result.risk_factors.map(factor => `
+                    <div class="flex items-start">
+                        <span class="text-orange-600 mr-2">•</span>
+                        <span class="text-gray-800">${factor}</span>
+                    </div>
+                `).join('');
+            } else {
+                riskSection.classList.add('hidden');
+            }
+            
+            // Show specific recommendations
+            showRecommendations(hasDisease, result, inputData);
+            
+            // Scroll to result
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showRecommendations(hasDisease, result, inputData) {
+            const recDiv = document.getElementById('recommendations');
+            
+            if (hasDisease) {
+                // Rekomendasi untuk pasien POSITIF (ada risiko)
+                recDiv.className = 'p-6 rounded-lg border-2 border-red-300 bg-red-50';
+                
+                let specificAdvice = [];
+                
+                // Saran spesifik berdasarkan faktor risiko
+                if (inputData.chol > 240) {
+                    specificAdvice.push('Segera turunkan kadar kolesterol dengan diet rendah lemak dan obat statin jika diperlukan');
+                }
+                if (inputData.trestbps > 140) {
+                    specificAdvice.push('Kontrol tekanan darah dengan obat anti-hipertensi dan diet rendah garam');
+                }
+                if (inputData.age > 60) {
+                    specificAdvice.push('Lakukan pemeriksaan jantung rutin setiap 3-6 bulan karena faktor usia');
+                }
+                if (inputData.exang == 1) {
+                    specificAdvice.push('Hindari olahraga berat, konsultasikan program exercise yang aman dengan dokter');
+                }
+                if (inputData.fbs == 1) {
+                    specificAdvice.push('Kendalikan gula darah untuk mencegah komplikasi kardiovaskular');
+                }
+                
+                recDiv.innerHTML = `
+                    <h3 class="text-xl font-bold text-red-800 mb-4">🚨 Rekomendasi Segera</h3>
+                    <div class="space-y-3 text-gray-800">
+                        <p class="font-bold text-red-700">⚠️ PENTING: Segera konsultasi dengan dokter spesialis jantung!</p>
+                        <p><strong>• Pemeriksaan lanjutan:</strong> ECG, Echocardiography, Stress Test, Angiografi</p>
+                        <p><strong>• Pengobatan:</strong> Dokter akan meresepkan obat sesuai kondisi (aspirin, beta-blocker, ACE inhibitor, dll)</p>
+                        ${specificAdvice.map(advice => `<p><strong>•</strong> ${advice}</p>`).join('')}
+                        <p><strong>• Lifestyle:</strong> Stop merokok, diet jantung sehat (rendah garam, lemak jenuh), olahraga ringan teratur</p>
+                        <p><strong>• Monitoring:</strong> Cek tekanan darah dan gula darah setiap hari</p>
+                    </div>
+                `;
+            } else {
+                // Rekomendasi untuk pasien NEGATIF (tidak ada risiko)
+                recDiv.className = 'p-6 rounded-lg border-2 border-green-300 bg-green-50';
+                
+                let preventiveAdvice = [];
+                
+                // Saran preventif berdasarkan data
+                if (inputData.chol > 200) {
+                    preventiveAdvice.push('Kolesterol Anda masih batas normal tinggi, jaga dengan diet sehat');
+                }
+                if (inputData.trestbps > 120) {
+                    preventiveAdvice.push('Tekanan darah mendekati batas, monitor secara rutin');
+                }
+                if (inputData.age > 50) {
+                    preventiveAdvice.push('Lakukan medical check-up lengkap setiap tahun');
+                }
+                
+                recDiv.innerHTML = `
+                    <h3 class="text-xl font-bold text-green-800 mb-4">✅ Rekomendasi Pencegahan</h3>
+                    <div class="space-y-3 text-gray-800">
+                        <p><strong>• Diet Sehat:</strong> Konsumsi sayur, buah, ikan salmon, kacang-kacangan, hindari makanan berlemak</p>
+                        <p><strong>• Olahraga:</strong> 30-60 menit per hari, 5x seminggu (jalan cepat, jogging, berenang)</p>
+                        <p><strong>• Berat Badan:</strong> Pertahankan BMI ideal (18.5-24.9)</p>
+                        ${preventiveAdvice.map(advice => `<p><strong>•</strong> ${advice}</p>`).join('')}
+                        <p><strong>• Hindari:</strong> Merokok, alkohol berlebihan, stres tinggi</p>
+                        <p><strong>• Check-up:</strong> Pemeriksaan kesehatan rutin tahunan tetap penting</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function retrainModel() {
+            if (!confirm('Latih ulang model? Proses ini memakan waktu beberapa menit.')) return;
+            
+            try {
+                const response = await fetch('/api/retrain', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('Model berhasil dilatih ulang!\nAccuracy: ' + (data.metrics.accuracy * 100).toFixed(2) + '%');
+                    loadMetrics();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Load metrics when page loads
+        window.addEventListener('load', loadMetrics);
+    </script>
+</body>
+</html>
